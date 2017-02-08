@@ -1,0 +1,40 @@
+require 'trollop'
+require_relative '../lib/awscleanup/version'
+require_relative '../lib/awscleanup'
+
+# Options to get stuff right
+opts = Trollop.options do
+  version 'Aws cleanup'
+  banner <<-EOS
+Test is an awesome program that does something very, very important.
+
+Usage:
+       awscleanup [options]
+where [options] are:
+EOS
+  opt :list, 'List objects, if false cleans objects', default: true
+  opt :id, 'List instance', type: :string
+  opt :time, 'Number of days for operation', default: 10
+  opt :region, 'Aws region', type: :string
+  opt :service, 'Aws service', type: :string
+end
+
+Trollop.die :region, 'region must exist' if opts[:region].nil?
+Trollop.die :service, 'service must exist' if opts[:service].nil?
+Trollop.die :list, 'Cant clean and list' if opts[:list] == true && opts[:clean] == true
+
+# Initialize class with service + region
+client = AwsCleanup.new(opts[:service], opts[:region])
+if opts[:list] == true
+  if !opts[:id].nil?
+    client.list_object(opts[:id])
+  else
+    client.list
+  end
+elsif opts[:list] == false
+  if !opts[:id].nil?
+    client.clean_object
+  else
+    client.clean
+  end
+end
